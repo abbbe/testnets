@@ -20,7 +20,7 @@ case $1 in
 	reinit)
                 $0 kill
                 $0 rm
-                $0 wipe
+                $0 wipedb
                 $0 init
                 $0 run  
                 $0 logs
@@ -28,13 +28,15 @@ case $1 in
 
 	init)
 		mkdir -p $DATADIR
-		cp $BASEDIR/geth-genesis.json $BASEDIR/geth-initaccounts.js $BASEDIR/geth-fundaccounts.js $DATADIR/
-		$DOCKER_RUN_INIT init /root/geth-genesis.json
+		cp $BASEDIR/geth-net24601.json $BASEDIR/geth-initaccounts.js $BASEDIR/geth-fundaccounts.js $DATADIR/
+		$DOCKER_RUN_INIT init /root/geth-net24601.json
 		$DOCKER_RUN_INIT --exec "loadScript('/root/geth-initaccounts.js')" console
                 ;;
 	run)
 		$DOCKER_RUN --mine --minerthreads 1 --unlock 0,1,2,3,4,5 --password /dev/null \
- 			--nodiscover --netrestrict 172.18.0.0/24 --rpc --rpcaddr 0.0.0.0 --rpccorsdomain "*" --verbosity 5
+			--targetgaslimit 7500000 \
+ 			--nodiscover --netrestrict 172.18.0.0/24,192.168.0.0/24 \
+			--rpc --rpcaddr 0.0.0.0 --rpccorsdomain "*" --rpcapi "db,web3,eth,net,debug" --verbosity 5
 		docker exec $NAME hwclock -s
 		;;
 
